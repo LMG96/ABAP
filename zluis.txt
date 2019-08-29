@@ -1,0 +1,205 @@
+*&---------------------------------------------------------------------*
+*& Report  ZLUIS
+*&
+*&---------------------------------------------------------------------*
+*&
+*&
+*&---------------------------------------------------------------------*
+
+report zluis line-size 80.
+
+*tables: mara.
+
+
+
+
+
+
+*data v type i value '10'.
+*write v.
+
+
+
+
+*data: begin of mtab occurs 0,
+*  matnr like mara-matnr,
+*  ernam like mara-ernam,
+*  myiterator(12) type i,
+*  mycount(20),
+*  end of mtab.
+*data wdatos like line of mara."estructura
+*
+*data: begin of mtab2 occurs 0.
+*        include structure zcursol.
+*data end of mtab2.
+
+
+
+*14.3 Selección de parámetros. Pantalla de Selección.
+*SELECTION-SCREEN BEGIN OF BLOCK blockb1.
+*PARAMETERS:  name(16) TYPE c ,
+*             age TYPE zdom.
+*SELECTION-SCREEN END OF BLOCK blockb1.
+
+*parameters: hombre type c as checkbox.
+*PARAMETERS: hombre RADIOBUTTON GROUP gr1 DEFAULT 'X',
+*            mujer RADIOBUTTON GROUP gr1.
+*
+*SELECT-OPTIONS NUM_MAT FOR mara-matnr.
+
+*-------- Ejemplo de llamada a una funcion ----------------
+
+*data: sumr type qf00-ran_int value 4,
+*      sumr2 type qf00-ran_int value 84,
+*      res type qf00-ran_int,
+*      var type qf00-ran_int value 115.
+*
+*
+*call function 'QF05_RANDOM_INTEGER'
+*  exporting
+*    ran_int_max   = sumr2
+*    ran_int_min   = sumr
+*  importing
+*    ran_int       = res
+*  exceptions
+*    invalid_input = 1
+*    others        = 2.
+*
+*write res.
+
+
+*----- PRUEBA DE LLENADO DE UNA TABLA GRACIAS AL SELECT -------
+*----- Con seleccion de rango gracias al select-options -------
+*select * from MARA  where matnr in num_mat.
+*  mtab-matnr = MARA-matnr.
+*  mtab-ernam = MARA-ernam.
+*  append mtab.
+*ENDSELECT.
+*
+*loop at mtab.
+*  mtab-myiterator = 1.
+*  mtab-mycount = 'Country1'.
+*  modify mtab.
+*ENDLOOP.
+*
+*skip.
+
+
+
+*----- PRUEBA DE LLENADO DE UNA TABLA DE FORMA MANUAL -------
+*data: var1 LIKE mtab-kokrs,
+*      var2 LIKE mtab-matnr,
+**      var3 LIKE mtab-mycount,
+**      var4 LIKE mtab-myiterator,
+*      in type i VALUE '2'.
+*
+*wdatos-matnr = '2'.
+*wdatos-kokrs = '2'.
+*wdatos-myiterator = '9'.
+*wdatos-mycount = 'Country1'.
+*
+*append wdatos to mtab.
+*clear wdatos.
+*
+*while in <> 5.
+**      var 1 = QF05_RANDOM_INTEGER(0, 100).
+**      var2 = QF05_RANDOM_INTEGER(0, 100).
+*      wdatos-matnr = '1'.
+*      wdatos-kokrs = '1'.
+*      wdatos-myiterator = in.
+*      wdatos-mycount = 'Country1'.
+*      in = in + 1.
+*
+*      append wdatos to mtab.
+*      clear wdatos.
+*
+*endwhile.
+*
+*loop at mtab into wdatos.
+*  write wdatos-myiterator.
+*  skip.
+*endloop.
+
+
+
+
+*------PRUEBAS DE SELECTION SCREEN Y PARAMETERS--------
+*write 'Hola, '.
+*skip.
+*
+*WRITE: 'Tu nombre es', name, ' y tu edad es', age, '.'.
+*SKIP.
+*
+*if hombre = 'X' .
+*  write 'Has seleccionado sexo masculino.'.
+*  skip.
+*  ELSEIF mujer = 'X' .
+*  write 'Has seleccionado sexo femenino.'.
+*  skip.
+*endif.
+*SKIP.
+
+
+* ----PRUEBAS DE SINTAXIS ABAP-------------------------
+*data: var1(20) type c value 'Hola buenas',
+*      var2(20) type c value 'Hasta luego',
+*      var3(20) type c,
+*      var4(80) type c,
+*      var5 type i,
+*      var9 type c,
+*      impr(20) type c,
+*      cont1 type c,
+*      cont2(12) type c.
+*
+*
+*
+*move var2 to var3. "var3 = var2
+*write var1.
+*skip.
+*write var2.
+*skip.
+*write var3.
+*skip.
+*
+*move var1 to var2. "var2 ahora contendra el valor hola buenas.
+*write: var1, var2, var3.
+*skip.
+*move var3 to var1. "var1 contiene hasta luego.
+*write: var1, var2, var3.
+*skip.
+*shift var3 by 6 places.
+*write var3.
+*skip.
+*
+*impr = '-----------'.
+*write impr.
+*skip.
+*
+*cont1 = '1'.
+*do 3 times.
+*  concatenate cont1 cont2 into cont2 separated by space.
+*  cont1 = cont1 + 1.
+**  cont1 = cont2 + 1.
+*enddo.
+*write cont2.
+*skip.
+*
+*clear var4.
+*write impr.
+*var5 = 5.
+*while var5 ne 0.
+*  concatenate var3 var4 into var4 separated by space.
+*  var5 = var5 - 1.
+*endwhile.
+*skip.
+*condense var4 no-gaps.
+*uline.
+*write var4.
+*
+*
+*new-page.
+*uline.
+*write var4.
+*uline.
+*write var4.
+*write sy-title.

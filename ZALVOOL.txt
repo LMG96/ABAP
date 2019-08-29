@@ -1,0 +1,306 @@
+*&---------------------------------------------------------------------
+*
+*& Report  ZALVOOL
+*&
+*&---------------------------------------------------------------------*
+*&
+*& Luis Mesa Garcia
+*&---------------------------------------------------------------------*
+
+report zalvool.
+
+*tablas de diccionario
+tables: mard, ekpo, makt, zcursol.
+
+*textos literales
+
+CONSTANTS t1(62) type c value
+      'El total de materiales seleccionados superan las 100 unidades.'.
+
+*instancia clases
+data: var_grid type ref to cl_gui_alv_grid,
+      var_container type ref to cl_gui_custom_container.
+*instancia catalogo y layout
+data: it_cat type lvc_t_fcat,
+      wa_cat type lvc_s_fcat,
+
+      i_layout type lvc_s_layo.
+
+*Estructuras
+types: begin of st_mat,
+      matnr like mard-matnr,
+      werks like mard-werks,
+      menge like ekpo-menge,
+      bukrs like ekpo-bukrs,
+      maktx like makt-maktx,
+      isinz(7) type c,
+      color(4),
+end of st_mat.
+
+types: begin of st_ekpo,
+      matnr like ekpo-matnr,
+      werks like ekpo-werks,
+      menge like ekpo-menge,
+      bukrs like ekpo-bukrs,
+end of st_ekpo.
+
+types: begin of st_makt,
+      matnr like makt-matnr,
+      maktx like makt-maktx,
+end of st_makt.
+
+*tablas sin cabecera
+data: it_mat type table of st_mat,
+ it_ekpo type table of st_ekpo,
+ it_makt type table of st_makt,
+ it_z type table of zcursol.
+
+*workarea (estructura de las tablas con cabeceras)
+data: wa_mat like it_mat with header line,
+      wa_ekpo like it_ekpo with header line,
+      wa_makt like it_makt with header line,
+      wa_z like it_z with header line.
+
+
+*Parametros de seleccion
+selection-screen skip.
+parameters:  p_center like mard-werks obligatory.
+selection-screen skip.
+selection-screen uline.
+selection-screen skip.
+select-options s_rngmat for mard-matnr.
+selection-screen skip.
+selection-screen uline.
+selection-screen skip.
+parameters:  p_qntval like ekpo-menge.
+*Eventos
+start-of-selection.
+
+  call screen '100'.
+
+end-of-selection.
+
+
+
+
+*&---------------------------------------------------------------------*
+*&      Module  STATUS_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module status_0100 output.
+*  SET PF-STATUS 'xxxxxxxx'.
+*  SET TITLEBAR 'xxx'.
+
+  create object var_container
+    exporting
+      container_name              = 'CONT'
+    exceptions
+      cntl_error                  = 1
+      cntl_system_error           = 2
+      create_error                = 3
+      lifetime_error              = 4
+      lifetime_dynpro_dynpro_link = 5
+      others                      = 6.
+  if sy-subrc <> 0.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  endif.
+
+
+  create object var_grid
+    exporting
+      i_parent          = var_container
+    exceptions
+      error_cntl_create = 1
+      error_cntl_init   = 2
+      error_cntl_link   = 3
+      error_dp_create   = 4
+      others            = 5.
+  if sy-subrc <> 0.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*              WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  endif.
+
+  clear: it_mat.
+  refresh: it_mat.
+
+*-----------------------------------------------------------
+
+*mard-matnr mard-werks ekpo-menge ekpo-bukrs makt-maktx isinz
+
+****select m~matnr m~werks e~menge e~bukrs mk~maktx
+****  from mard as m
+****  INNER JOIN ekpo as e on e~werks = m~werks and e~matnr = m~matnr
+****  INNER JOIN makt as mk on m~matnr = mk~matnr
+****  INTO TABLE it_mat
+****    where m~werks = p_center and m~matnr IN s_rngmat.
+****sort it_mat by matnr ASCENDING.
+****delete ADJACENT DUPLICATES FROM it_mat comparing matnr.
+
+*SOLO ME APARECE EL REGISTRO QUE CUMPLE TODOS LOS REQUISITOS;
+*ES DECIR, LOS QUE TIENEN VALOR EN TODOS LOS CAMPOS QUE SE REALIZA
+*EL SELECT.
+*-----------------------------------------------------------
+
+*obtencion de datos
+  perform bring_all_data.
+
+
+*inflar estructura del catalogo
+  clear: wa_cat.
+
+  clear: it_cat.
+  refresh: it_cat.
+
+  wa_cat-col_pos = '1'.
+  wa_cat-fieldname = 'matnr'.
+  wa_cat-seltext = 'Material'.
+  wa_cat-coltext = 'Material'.
+  append wa_cat to it_cat.
+
+  wa_cat-col_pos = '2'.
+  wa_cat-fieldname = 'werks'.
+  wa_cat-seltext = 'Centro'.
+  wa_cat-coltext = 'Centro'.
+  append wa_cat to it_cat.
+
+  wa_cat-col_pos = '3'.
+  wa_cat-fieldname = 'menge'.
+  wa_cat-seltext = 'Cantidad de pedido'.
+  wa_cat-coltext = 'Cantidad pedido'.
+  append wa_cat to it_cat.
+
+  wa_cat-col_pos = '4'.
+  wa_cat-fieldname = 'bukrs'.
+  wa_cat-seltext = 'Sociedad'.
+  wa_cat-coltext = 'Sociedad'.
+  append wa_cat to it_cat.
+
+  wa_cat-col_pos = '5'.
+  wa_cat-fieldname = 'maktx'.
+  wa_cat-seltext = 'Texto breve de material'.
+  wa_cat-coltext = 'Txt breve mat'.
+  append wa_cat to it_cat.
+
+  wa_cat-col_pos = '6'.
+  wa_cat-fieldname = 'isinz'.
+  wa_cat-seltext = 'Esta en tabla Z'.
+  wa_cat-coltext = 'TablaZ?'.
+  append wa_cat to it_cat.
+
+  i_layout-grid_title = 'ALV CON OO, TOMANDO DE BASE ZCURSO04'.
+  i_layout-zebra = 'X'.
+  i_layout-info_fname = 'color'.
+  i_layout-col_opt = 'X'.
+
+  call method var_grid->set_table_for_first_display
+    exporting
+      is_layout       = i_layout
+    changing
+      it_outtab       = it_mat
+      it_fieldcatalog = it_cat.
+  if sy-subrc <> 0.
+* Implement suitable error handling here
+  endif.
+
+
+endmodule.                 " STATUS_0100  OUTPUT
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+module user_command_0100 input.
+  case sy-ucomm.
+    when 'EXT'.
+      leave program.
+  endcase.
+endmodule.                 " USER_COMMAND_0100  INPUT
+
+
+form bring_all_data.
+  perform data.
+endform.
+
+
+form data.
+  select werks matnr from mard appending corresponding fields of table
+it_mat
+  where  werks eq p_center and matnr in s_rngmat.
+
+  loop at it_mat into wa_mat.
+    perform data_ekpo.
+    perform data_makt.
+    perform compruebaz.
+    modify it_mat from wa_mat.
+
+    if wa_mat-menge > 100.
+      call function 'POPUP_TO_DISPLAY_TEXT'
+        exporting
+*         TITEL     = ' '
+          textline1 = t1
+*         TEXTLINE2 = ' '
+*         START_COLUMN       = 25
+*         START_ROW = 6
+        .
+    endif.
+  endloop.
+  clear wa_mat.
+  sort it_mat by matnr ascending.
+  delete adjacent duplicates from it_mat comparing matnr.
+
+endform.                    " DATA_MARD
+*&---------------------------------------------------------------------*
+*&      Form  DATA_EKPO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form data_ekpo.
+  select matnr werks menge bukrs  into wa_ekpo
+    from ekpo
+
+    where matnr eq wa_mat-matnr and
+          werks eq wa_mat-werks.
+
+    wa_mat-menge = wa_ekpo-menge.
+    wa_mat-bukrs = wa_ekpo-bukrs.
+
+    if wa_mat-menge > p_qntval.
+      wa_mat-color = 'C611'.
+    endif.
+  endselect.
+
+endform.                    " DATA_EKPO
+
+form compruebaz .
+*obtencion datos tabla z
+  select * from zcursol appending corresponding fields of table it_z.
+*  SELECT MATNR INTO WA_Z FROM ZCURSOL where matnr eq wa_mat-matnr.
+*  ENDSELECT.
+*comparacion tabla it_mat con tabla z
+  read table it_z with key matnr = wa_mat-matnr into wa_z.
+  if sy-subrc = 0.
+    wa_mat-isinz = '---X---'.
+  endif.
+endform.                    " COMPRUEBA
+*&---------------------------------------------------------------------*
+*&      Form  DATA_MAKT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form data_makt .
+  select matnr maktx  into wa_makt
+    from makt
+
+    where matnr eq wa_mat-matnr.
+
+    wa_mat-maktx = wa_makt-maktx.
+  endselect.
+endform.                    " DATA_MAKT

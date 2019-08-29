@@ -1,0 +1,251 @@
+*&---------------------------------------------------------------------*
+*& Report  ZALVJER
+*&
+*&---------------------------------------------------------------------*
+*&
+*& Luis Mesa García
+*&---------------------------------------------------------------------*
+
+report zalvjer.
+
+*tablas del diccionario
+tables: t001,
+        ekpo,
+        kna1.
+
+type-pools:slis.
+
+*estructuras de tablas
+types:
+begin of st_t001,
+      bukrs type t001-bukrs,
+      ort01 type t001-ort01,
+      waers type t001-waers,
+      adrnr type t001-adrnr,
+      expand,
+end of st_t001,
+
+begin of st_ekpo,
+      bukrs TYPE ekpo-bukrs,
+      ebeln TYPE ekpo-ebeln,
+      ebelp type ekpo-ebelp,
+      matnr type ekpo-matnr,
+      txz01 type ekpo-txz01,
+      werks type ekpo-werks,
+end of st_ekpo.
+
+*tablas sin cabecera
+data: it_ekpo type table of st_ekpo,
+      it_t001 type table of st_t001.
+
+*workareas
+data: wa_ekpo like it_ekpo with header line,
+      wa_t001 like it_t001 with header line.
+
+*campo clave
+data: key TYPE SLIS_KEYINFO_ALV.
+
+*layout
+data ls_layout type slis_layout_alv.
+
+*fieldcatalog
+data: it_cat type slis_t_fieldcat_alv,
+     wa_cat type slis_fieldcat_alv.
+
+
+*pantalla de selección
+selection-screen skip.
+select-options: s_bukrs for t001-bukrs.
+
+*eventos
+start-of-selection.
+  perform bring_data.
+  perform def_layout.
+  perform inflate_cat.
+  perform inflate_alv.
+
+end-of-selection.
+
+*subrutinas
+*&---------------------------------------------------------------------*
+*&      Form  BRING_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form bring_data .
+  select bukrs ort01 waers adrnr
+    appending corresponding fields of table it_t001
+    from t001
+      where bukrs in s_bukrs.
+
+  select bukrs ebeln ebelp matnr txz01 werks
+    appending corresponding fields of table it_ekpo
+    from ekpo
+      where bukrs in s_bukrs.
+
+endform.                    " BRING_DATA
+*&---------------------------------------------------------------------*
+*&      Form  DEF_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form def_layout .
+
+  ls_layout-zebra = 'X'.
+  ls_layout-colwidth_optimize = 'X'.
+  ls_layout-expand_fieldname = 'EXPAND'.
+
+  key-header01 = 'bukrs'.
+  key-item01 = 'bukrs'.
+endform.                    " DEF_LAYOUT
+*&---------------------------------------------------------------------*
+*&      Form  INFLATE_CAT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form inflate_cat .
+
+*para la tabla header
+  clear wa_cat.
+  wa_cat-col_pos = 1.
+  wa_cat-fieldname = 'bukrs'.
+  wa_cat-tabname = 'it_t001'.
+  wa_cat-key = 'X'.
+  wa_cat-seltext_m = 'Sociedad'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 2.
+  wa_cat-fieldname = 'ort01'.
+  wa_cat-tabname = 'it_t001'.
+  wa_cat-seltext_m = 'Población'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 3.
+  wa_cat-fieldname = 'waers'.
+  wa_cat-tabname = 'it_t001'.
+  wa_cat-seltext_m = 'Moneda'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 4.
+  wa_cat-fieldname = 'adrnr'.
+  wa_cat-tabname = 'it_t001'.
+  wa_cat-seltext_m = 'Dirección'.
+  append wa_cat to it_cat.
+
+*para la tabla interna
+  clear wa_cat.
+  wa_cat-col_pos = 5.
+  wa_cat-fieldname = 'bukrs'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-key = 'X'.
+  wa_cat-seltext_m = 'Sociedad'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 6.
+  wa_cat-fieldname = 'ebeln'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-seltext_m = 'Documento de compras'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 7.
+  wa_cat-fieldname = 'ebelp'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-seltext_m = 'Posición del documento de compras'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 8.
+  wa_cat-fieldname = 'matnr'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-seltext_m = 'Material'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 9.
+  wa_cat-fieldname = 'txz01'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-seltext_m = 'Descripción'.
+  append wa_cat to it_cat.
+
+  clear wa_cat.
+  wa_cat-col_pos = 10.
+  wa_cat-fieldname = 'werks'.
+  wa_cat-tabname = 'it_ekpo'.
+  wa_cat-seltext_m = 'Centro'.
+  append wa_cat to it_cat.
+
+
+
+endform.                    " INFLATE_CAT
+*&---------------------------------------------------------------------*
+*&      Form  INFLATE_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form inflate_alv .
+call function 'REUSE_ALV_HIERSEQ_LIST_DISPLAY'
+  exporting
+*   I_INTERFACE_CHECK              = ' '
+*   I_CALLBACK_PROGRAM             = sy-cprog
+*   I_CALLBACK_PF_STATUS_SET       = ' '
+*   I_CALLBACK_USER_COMMAND        = ' '
+   IS_LAYOUT                      = ls_layout
+   IT_FIELDCAT                    = it_cat
+*   IT_EXCLUDING                   =
+*   IT_SPECIAL_GROUPS              =
+*   IT_SORT                        =
+*   IT_FILTER                      =
+*   IS_SEL_HIDE                    =
+*   I_SCREEN_START_COLUMN          = 0
+*   I_SCREEN_START_LINE            = 0
+*   I_SCREEN_END_COLUMN            = 0
+*   I_SCREEN_END_LINE              = 0
+*   I_DEFAULT                      = 'X'
+*   I_SAVE                         = ' '
+*   IS_VARIANT                     =
+*   IT_EVENTS                      =
+*   IT_EVENT_EXIT                  =
+    i_tabname_header               = 'it_t001'
+    i_tabname_item                 = 'it_ekpo'
+*   I_STRUCTURE_NAME_HEADER        =
+*   I_STRUCTURE_NAME_ITEM          =
+    is_keyinfo                     = key
+*   IS_PRINT                       =
+*   IS_REPREP_ID                   =
+*   I_BYPASSING_BUFFER             =
+*   I_BUFFER_ACTIVE                =
+*   IR_SALV_HIERSEQ_ADAPTER        =
+*   IT_EXCEPT_QINFO                =
+*   I_SUPPRESS_EMPTY_DATA          = ABAP_FALSE
+* IMPORTING
+*   E_EXIT_CAUSED_BY_CALLER        =
+*   ES_EXIT_CAUSED_BY_USER         =
+  tables
+    t_outtab_header                = it_t001
+    t_outtab_item                  = it_ekpo
+* EXCEPTIONS
+*   PROGRAM_ERROR                  = 1
+*   OTHERS                         = 2
+          .
+if sy-subrc <> 0.
+* Implement suitable error handling here
+endif.
+
+endform.                    " INFLATE_ALV

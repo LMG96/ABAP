@@ -1,0 +1,317 @@
+*&---------------------------------------------------------------------*
+*& Report  ZCURSO04
+*&
+*&---------------------------------------------------------------------*
+*&
+*& Luis Mesa Garcia
+*&---------------------------------------------------------------------*
+
+report zcurso04.
+
+type-pools: slis.
+
+*tablas a usar
+tables: mard, ekpo, makt, zcursol.
+
+*-----------------variables para el uso del ALV.-----------------------*
+
+*textos a usar
+*data t type c value text-001.
+data t1(62) type c value
+      'El total de materiales seleccionados superan las 100 unidades.'.
+
+*definicion del layout y del catalogo
+
+data: ls_layout type slis_layout_alv,
+      fieldcat type slis_t_fieldcat_alv with header line.
+
+*estructura de la tabla interna
+
+data: begin of st_mat occurs 0.
+        include structure mard.
+data: menge like ekpo-menge,
+      bukrs like ekpo-bukrs,
+      maktx like makt-maktx,
+      isinz(7) type c,
+      color(4).
+data end of st_mat.
+
+*tabla interna
+
+data begin of it_mat occurs 0.
+        include structure st_mat.
+data end of it_mat.
+
+*tabla interna z
+
+data begin of it_z occurs 0.
+        include structure zcursol.
+data end of it_z.
+
+*datos a introducir por el usuario
+selection-screen skip.
+parameters:  p_center like mard-werks obligatory.
+selection-screen skip.
+selection-screen uline.
+selection-screen skip.
+select-options s_rngmat for mard-matnr.
+selection-screen skip.
+selection-screen uline.
+selection-screen skip.
+parameters:  p_qntval like ekpo-menge.
+
+*eventos
+
+start-of-selection.
+  perform bring_data.
+  perform def_layout.
+  perform inflate_cat.
+  perform inflate_alv.
+
+end-of-selection.
+
+*fin eventos
+
+
+*performs
+
+*&---------------------------------------------------------------------*
+*&      Form  INFLATE_ALV
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form inflate_alv .
+
+  call function 'REUSE_ALV_GRID_DISPLAY'
+    exporting
+*     I_INTERFACE_CHECK  = ' '
+      i_bypassing_buffer = 'X'
+      i_buffer_active    = 'X'
+      i_callback_program = sy-repid
+*     I_CALLBACK_PF_STATUS_SET          = ' '
+*     I_CALLBACK_USER_COMMAND           = ' '
+*     I_CALLBACK_TOP_OF_PAGE            = ' '
+*     I_CALLBACK_HTML_TOP_OF_PAGE       = ' '
+*     I_CALLBACK_HTML_END_OF_LIST       = ' '
+*     I_STRUCTURE_NAME   =
+*     I_BACKGROUND_ID    = ' '
+      i_grid_title       = 'TABLA PERSONALIZADA'
+*     I_GRID_SETTINGS    =
+      is_layout          = ls_layout
+      it_fieldcat        = fieldcat[]
+*     IT_EXCLUDING       =
+*     IT_SPECIAL_GROUPS  =
+*     IT_SORT            =
+*     IT_FILTER          =
+*     IS_SEL_HIDE        =
+*     I_DEFAULT          = 'X'
+*     I_SAVE             = ' '
+*     IS_VARIANT         =
+*     IT_EVENTS          =
+*     IT_EVENT_EXIT      =
+*     IS_PRINT           =
+*     IS_REPREP_ID       =
+*     I_SCREEN_START_COLUMN             = 0
+*     I_SCREEN_START_LINE               = 0
+*     I_SCREEN_END_COLUMN               = 0
+*     I_SCREEN_END_LINE  = 0
+*     I_HTML_HEIGHT_TOP  = 0
+*     I_HTML_HEIGHT_END  = 0
+*     IT_ALV_GRAPHICS    =
+*     IT_HYPERLINK       =
+*     IT_ADD_FIELDCAT    =
+*     IT_EXCEPT_QINFO    =
+*     IR_SALV_FULLSCREEN_ADAPTER        =
+* IMPORTING
+*     E_EXIT_CAUSED_BY_CALLER           =
+*     ES_EXIT_CAUSED_BY_USER            =
+    tables
+      t_outtab           = it_mat
+* EXCEPTIONS
+*     PROGRAM_ERROR      = 1
+*     OTHERS             = 2
+    .
+  if sy-subrc <> 0.
+* Implement suitable error handling here
+  endif.
+
+endform.                    " INFLATE_ALV
+
+
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  BRING_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form bring_data .
+  clear: it_mat.
+  refresh: it_mat.
+
+*obtencion de datos de la tabla mard
+  perform data_mard.
+
+  loop at it_mat.
+
+*obtencion de datos de la tabla ekpo
+    perform data_ekpo.
+
+*obtencion de datos de la tabla makt
+    perform data_makt.
+
+*comparacion de materiales de la tabla z a la interna:
+*si existe en ambas tablas indicar con una x el campo ISINZ.
+    perform compruebaz.
+
+    if it_mat-menge > 100.
+      call function 'POPUP_TO_DISPLAY_TEXT'
+        exporting
+*         TITEL     = ' '
+          textline1 = t1
+*         TEXTLINE2 = ' '
+*         START_COLUMN       = 25
+*         START_ROW = 6
+        .
+    endif.
+  endloop.
+  sort it_mat by matnr ascending.
+  delete adjacent duplicates from it_mat comparing matnr.
+
+endform.                    " BRING_DATA
+*&---------------------------------------------------------------------*
+*&      Form  DEF_LAYOUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form def_layout .
+  ls_layout-zebra = 'X'.
+  ls_layout-info_fieldname = 'color'.
+  ls_layout-colwidth_optimize = 'X'.
+endform.                    " DEF_LAYOUT
+*&---------------------------------------------------------------------*
+*&      Form  INFLATE_CAT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form inflate_cat .
+  clear fieldcat.
+  refresh fieldcat.
+
+  call function 'REUSE_ALV_FIELDCATALOG_MERGE'
+    exporting
+      i_program_name     = sy-repid
+      i_internal_tabname = 'ST_MAT'
+*     I_STRUCTURE_NAME   =
+*     I_CLIENT_NEVER_DISPLAY       = 'X'
+      i_inclname         = sy-repid
+*     I_BYPASSING_BUFFER =
+*     I_BUFFER_ACTIVE    =
+    changing
+      ct_fieldcat        = fieldcat[]
+*   EXCEPTIONS
+*     INCONSISTENT_INTERFACE       = 1
+*     PROGRAM_ERROR      = 2
+*     OTHERS             = 3
+    .
+  if sy-subrc <> 0.
+* Implement suitable error handling here
+  endif.
+
+
+  loop at fieldcat.
+    if fieldcat-fieldname = 'ISINZ'.
+      fieldcat-seltext_m = 'Esta en tablaZ'.
+      modify fieldcat.
+    endif.
+
+    if fieldcat-fieldname <> 'ISINZ' and
+      fieldcat-fieldname <> 'MATNR' and fieldcat-fieldname <> 'WERKS'
+      and fieldcat-fieldname <> 'MENGE' and fieldcat-fieldname <>
+      'BUKRS' and fieldcat-fieldname <> 'MAKTX'.
+
+      fieldcat-no_out = 'X'.
+      modify fieldcat.
+
+    endif.
+
+  endloop.
+
+endform.                    " INFLATE_CAT
+*&---------------------------------------------------------------------*
+*&      Form  COMPRUEBA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form compruebaz .
+*obtencion datos tabla z
+  select * from zcursol appending corresponding fields of table it_z.
+
+*comparacion tabla it_mat con tabla z
+  read table it_z with key matnr = it_mat-matnr.
+  if sy-subrc = 0.
+    it_mat-isinz = '---X---'.
+    modify it_mat.
+  endif.
+endform.                    " COMPRUEBA
+*&---------------------------------------------------------------------*
+*&      Form  DATA_MARD
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form data_mard .
+  select werks matnr from mard appending corresponding fields of table
+it_mat
+  where  werks eq p_center and matnr in s_rngmat.
+endform.                    " DATA_MARD
+*&---------------------------------------------------------------------*
+*&      Form  DATA_EKPO
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form data_ekpo .
+  select * from ekpo where matnr eq it_mat-matnr and werks eq
+it_mat-werks.
+    it_mat-menge = ekpo-menge.
+    it_mat-bukrs = ekpo-bukrs.
+
+    if it_mat-menge > p_qntval.
+      it_mat-color = 'C611'.
+    endif.
+    modify it_mat.
+  endselect.
+endform.                    " DATA_EKPO
+*&---------------------------------------------------------------------*
+*&      Form  DATA_MAKT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+form data_makt .
+  select * from makt where matnr eq it_mat-matnr.
+    it_mat-maktx = makt-maktx.
+    modify it_mat.
+  endselect.
+endform.                    " DATA_MAKT
