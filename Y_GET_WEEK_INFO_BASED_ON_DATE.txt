@@ -1,0 +1,94 @@
+FUNCTION y_get_week_info_based_on_date.
+*"----------------------------------------------------------------------
+*"*"Interfase local
+*"  IMPORTING
+*"     REFERENCE(DATE) TYPE  SY-DATUM DEFAULT SY-DATUM
+*"  EXPORTING
+*"     REFERENCE(FECHAS) TYPE  ZTABAL_FECHAS
+*"     REFERENCE(WEEK) TYPE  SCAL-WEEK
+*"----------------------------------------------------------------------
+
+
+*estructura de la tabla a sacar
+  DATA BEGIN OF st_fechas.
+  DATA:  dia TYPE scal-date,
+         nombre_dia(16) TYPE c.
+  DATA END OF st_fechas.
+
+  DATA:    im_date TYPE scal-date.
+  DATA:    ex_week TYPE scal-week.
+  DATA:    ex_day TYPE scal-date,
+           ex_name TYPE hrvsched-daytxt.
+
+* Obtener la semana dada la fecha pasada por el usuario
+  im_date = date.
+  CALL FUNCTION 'DATE_GET_WEEK'
+    EXPORTING
+      date         = im_date
+    IMPORTING
+      week         = ex_week
+    EXCEPTIONS
+      date_invalid = 1
+      OTHERS       = 2.
+
+  IF sy-subrc <> 0.
+* MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*         WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+  ENDIF.
+
+* Obtener el primer dia de la semana
+
+  CALL FUNCTION 'WEEK_GET_FIRST_DAY'
+    EXPORTING
+      week         = ex_week
+    IMPORTING
+      date         = ex_day
+    EXCEPTIONS
+      week_invalid = 1
+      OTHERS       = 2.
+
+  IF sy-subrc <> 0.
+* MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*         WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+
+  ENDIF.
+
+
+
+*datos a mostrar en la tabla
+  DO 7 TIMES.
+
+    CALL FUNCTION 'RH_GET_DATE_DAYNAME'
+      EXPORTING
+        langu  = sy-langu
+        date   = ex_day
+*       CALID  =
+      IMPORTING
+*       DAYNR  =
+        daytxt = ex_name
+*       DAYFREE                   =
+* EXCEPTIONS
+*       NO_LANGU                  = 1
+*       NO_DATE                   = 2
+*       NO_DAYTXT_FOR_LANGU       = 3
+*       INVALID_DATE              = 4
+*       OTHERS = 5
+      .
+    IF sy-subrc <> 0.
+* Implement suitable error handling here
+    ENDIF.
+
+    st_fechas-dia = ex_day.
+    st_fechas-nombre_dia = ex_name.
+    APPEND st_fechas TO fechas.
+
+    ex_day = ex_day  + 1.
+
+  ENDDO.
+
+
+  week = ex_week.
+
+
+
+ENDFUNCTION.
