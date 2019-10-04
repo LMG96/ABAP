@@ -15,4 +15,4 @@ En zluis, se ve solo código comentado, fueron mis primeras líneas en ABAP.
   Es un ALV jerarquizaddo creado por el módulo de funciones
   
 ### Y_GET_WEEK_INFO_BASED_ON_DATE
-  Es un módulo de funciones, que sirve para que dada una fecha, te calcule el dia en si de cada dia de la semana + su nombre; y el número de la semana que es del año.
+  Es un módulo de funciones, que sirve para que dada una fecha, te calcule el dia en si de cada dia de la semana + su nombre; y el número de la semana que es del año. Para que funcione, debe de tener creada una estrucutra con el formato que saca la tabla del MF.
