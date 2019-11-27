@@ -1,0 +1,24 @@
+*----------------------------------------------------------------------*
+***INCLUDE ZARBOL_PAI.
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Module  PAI_100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE PAI_100 INPUT.
+
+  data: return_code type i.
+* CL_GUI_CFW=>DISPATCH must be called if events are registered
+* that trigger PAI
+* this method calls the event handler method of an event
+  CALL METHOD CL_GUI_CFW=>DISPATCH
+    importing return_code = return_code.
+  if return_code <> cl_gui_cfw=>rc_noevent.
+    " a control event occured => exit PAI
+    clear g_ok_code.
+    exit.
+  endif.
+
+  CLEAR G_OK_CODE.
+ENDMODULE.                 " PAI_100  INPUT

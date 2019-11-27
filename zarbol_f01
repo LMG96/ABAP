@@ -1,0 +1,373 @@
+*----------------------------------------------------------------------*
+***INCLUDE ZARBOL_F01.
+*----------------------------------------------------------------------*
+*&---------------------------------------------------------------------*
+*&      Form  CREATE_AND_INIT_TREE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM CREATE_AND_INIT_TREE .
+
+  DATA: NODE_TABLE TYPE TREEV_NTAB,
+        ITEM_TABLE TYPE ITEM_TABLE_TYPE,
+        EVENTS TYPE CNTL_SIMPLE_EVENTS,
+        EVENT TYPE CNTL_SIMPLE_EVENT.
+
+  CREATE OBJECT G_APPLICATION.
+
+* create a container for the tree control
+  CREATE OBJECT G_CUSTOM_CONTAINER
+    EXPORTING      " the container is linked to the custom control with the
+         " name 'TREE_CONTAINER' on the dynpro
+
+      CONTAINER_NAME = 'MY_CONTAINER'
+    EXCEPTIONS
+      CNTL_ERROR = 1
+      CNTL_SYSTEM_ERROR = 2
+      CREATE_ERROR = 3
+      LIFETIME_ERROR = 4
+      LIFETIME_DYNPRO_DYNPRO_LINK = 5.
+  IF SY-SUBRC <> 0.
+    MESSAGE A000.
+  ENDIF.
+* create a list tree
+  CREATE OBJECT G_TREE
+    EXPORTING
+      PARENT              = G_CUSTOM_CONTAINER
+      NODE_SELECTION_MODE = CL_GUI_LIST_TREE=>NODE_SEL_MODE_SINGLE
+      ITEM_SELECTION     = 'X'
+      WITH_HEADERS       = ' '
+    EXCEPTIONS
+      CNTL_SYSTEM_ERROR           = 1
+      CREATE_ERROR                = 2
+      FAILED                      = 3
+      ILLEGAL_NODE_SELECTION_MODE = 4
+      LIFETIME_ERROR              = 5.
+  IF SY-SUBRC <> 0.
+    MESSAGE A000.
+  ENDIF.
+
+* define the events which will be passed to the backend
+                                       " node double click
+*  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_NODE_DOUBLE_CLICK.
+*  EVENT-APPL_EVENT = 'X'.                                   "
+*  APPEND EVENT TO EVENTS.
+
+                                       " item double click
+  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_ITEM_DOUBLE_CLICK.
+  EVENT-APPL_EVENT = 'X'.
+  APPEND EVENT TO EVENTS.
+
+*                                       " expand no children
+*  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_EXPAND_NO_CHILDREN.
+*  EVENT-APPL_EVENT = 'X'.
+*  APPEND EVENT TO EVENTS.
+
+                                       " link click
+*  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_LINK_CLICK.
+*  EVENT-APPL_EVENT = 'X'.
+*  APPEND EVENT TO EVENTS.
+
+                                       " button click
+*  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_BUTTON_CLICK.
+*  EVENT-APPL_EVENT = 'X'.
+*  APPEND EVENT TO EVENTS.
+
+*                                       " checkbox change
+*  EVENT-EVENTID = CL_GUI_LIST_TREE=>EVENTID_CHECKBOX_CHANGE.
+*  EVENT-APPL_EVENT = 'X'.
+*  APPEND EVENT TO EVENTS.
+
+  CALL METHOD G_TREE->SET_REGISTERED_EVENTS
+    EXPORTING
+      EVENTS = EVENTS
+    EXCEPTIONS
+      CNTL_ERROR                = 1
+      CNTL_SYSTEM_ERROR         = 2
+      ILLEGAL_EVENT_COMBINATION = 3.
+  IF SY-SUBRC <> 0.
+    MESSAGE A000.
+  ENDIF.
+
+* assign event handlers in the application class to each desired event
+*  SET HANDLER G_APPLICATION->HANDLE_NODE_DOUBLE_CLICK FOR G_TREE.
+  SET HANDLER G_APPLICATION->HANDLE_ITEM_DOUBLE_CLICK FOR G_TREE.
+*  SET HANDLER G_APPLICATION->HANDLE_EXPAND_NO_CHILDREN FOR G_TREE.
+*  SET HANDLER G_APPLICATION->HANDLE_LINK_CLICK FOR G_TREE.
+*  SET HANDLER G_APPLICATION->HANDLE_BUTTON_CLICK FOR G_TREE.
+*  SET HANDLER G_APPLICATION->HANDLE_CHECKBOX_CHANGE FOR G_TREE.
+
+* add some nodes to the tree control
+* NOTE: the tree control does not store data at the backend. If an
+* application wants to access tree data later, it must store the
+* tree data itself.
+
+  PERFORM BUILD_NODE_AND_ITEM_TABLE USING NODE_TABLE ITEM_TABLE.
+
+  CALL METHOD G_TREE->ADD_NODES_AND_ITEMS
+    EXPORTING
+      NODE_TABLE = NODE_TABLE
+      ITEM_TABLE = ITEM_TABLE
+      ITEM_TABLE_STRUCTURE_NAME = 'MTREEITM'
+    EXCEPTIONS
+      FAILED = 1
+      CNTL_SYSTEM_ERROR = 3
+      ERROR_IN_TABLES = 4
+      DP_ERROR = 5
+      TABLE_STRUCTURE_NAME_NOT_FOUND = 6.
+  IF SY-SUBRC <> 0.
+    MESSAGE A000.
+  ENDIF.
+
+ENDFORM.                    " CREATE_AND_INIT_TREE
+
+*&---------------------------------------------------------------------*
+*&      Form  BUILD_NODE_AND_ITEM_TABLE
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*      -->P_NODE_TABLE  text
+*      -->P_ITEM_TABLE  text
+*----------------------------------------------------------------------*
+FORM BUILD_NODE_AND_ITEM_TABLE  USING    NODE_TABLE TYPE TREEV_NTAB
+                                         ITEM_TABLE TYPE ITEM_TABLE_TYPE.
+
+ DATA:  NODE TYPE TREEV_NODE,
+
+        ACTUAL_WEEK TYPE SCAL-WEEK,
+        DAY TYPE SCAL-DATE,
+
+         MY_DAY TYPE SY-DATUM,
+
+         Monday TYPE SY-DATUM,
+         Tuesday TYPE SY-DATUM,
+         Wednesday TYPE SY-DATUM,
+         Thursday TYPE SY-DATUM,
+         Friday TYPE SY-DATUM,
+         Saturday TYPE SY-DATUM,
+         Sunday TYPE SY-DATUM,
+
+        ITEM TYPE MTREEITM.
+
+
+  MY_DAY = SY-DATUM.
+
+* Build the node table.
+
+*------------------- ROOT -----------------------*
+  NODE-NODE_KEY = C_NODEKEY-WEEKS.                                       " Key of the node
+  CLEAR NODE-RELATKEY.      " Special case: A root node has no parent
+  CLEAR NODE-RELATSHIP.                " node.
+  NODE-HIDDEN = ' '.                   " The node is visible,
+  NODE-DISABLED = ' '.                 " selectable,
+  NODE-ISFOLDER = 'X'.                 " a folder.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-WEEKS.
+  ITEM-ITEM_NAME = '1'.                " Item with name '1'
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT. " Text Item
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = 'Semanas'.
+  APPEND ITEM TO ITEM_TABLE.
+
+
+
+
+
+
+*---------------------- WEEKS --------------------------*
+
+DO 6 TIMES.
+
+
+*---------------------- ACTUAL WEEK --------------------------*
+
+CALL FUNCTION 'Z_GET_WEEK_INFO_BASED_ON_DATE'
+ EXPORTING
+   DATE            = MY_DAY
+ IMPORTING
+   WEEK            = ACTUAL_WEEK
+   MONDAY          = monday
+   TUESDAY         = tuesday
+   WEDNESDAY       = wednesday
+   THURSDAY        = thursday
+   FRIDAY          = friday
+   SATURDAY        = saturday
+   SUNDAY          = sunday
+          .
+
+
+CALL FUNCTION 'WEEK_GET_FIRST_DAY'
+  EXPORTING
+    WEEK               = ACTUAL_WEEK
+ IMPORTING
+   DATE               = DAY
+* EXCEPTIONS
+*   WEEK_INVALID       = 1
+*   OTHERS             = 2
+          .
+IF SY-SUBRC <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+  concatenate ACTUAL_WEEK(4) '/' actual_week+4(2) into C_NODEKEY-WEEK.
+
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-WEEK.
+  NODE-RELATKEY = C_NODEKEY-WEEKS.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  NODE-ISFOLDER = 'X'.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-WEEK.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-WEEK.
+  APPEND ITEM TO ITEM_TABLE.
+
+
+*------------------ DAYS FOR EACH WEEK -----------------"
+
+  concatenate monday+4(2) '/' monday+6(2) into C_NODEKEY-DAY1.
+  concatenate tuesday+4(2) '/' tuesday+6(2) into C_NODEKEY-DAY2.
+  concatenate wednesday+4(2) '/' wednesday+6(2) into C_NODEKEY-DAY3.
+  concatenate thursday+4(2) '/' thursday+6(2) into C_NODEKEY-DAY4.
+  concatenate friday+4(2) '/' friday+6(2) into C_NODEKEY-DAY5.
+  concatenate saturday+4(2) '/' saturday+6(2) into C_NODEKEY-DAY6.
+  concatenate sunday+4(2) '/' sunday+6(2) into C_NODEKEY-DAY7.
+
+
+
+*
+**dia 1
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY1.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY1.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY1.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 2
+ CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY2.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY2.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY2.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 3
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY3.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY3.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY3.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 4
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY4.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY4.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY4.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 5
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY5.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY5.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY5.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 6
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY6.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY6.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY6.
+  APPEND ITEM TO ITEM_TABLE.
+
+*
+**dia 7
+  CLEAR NODE.
+  NODE-NODE_KEY = C_NODEKEY-DAY7.
+  NODE-RELATKEY = C_NODEKEY-WEEK.
+  NODE-RELATSHIP = CL_GUI_LIST_TREE=>RELAT_LAST_CHILD.
+  APPEND NODE TO NODE_TABLE.
+
+  CLEAR ITEM.
+  ITEM-NODE_KEY = C_NODEKEY-DAY7.
+  ITEM-ITEM_NAME = '1'.
+  ITEM-CLASS = CL_GUI_LIST_TREE=>ITEM_CLASS_TEXT.
+  ITEM-ALIGNMENT = CL_GUI_LIST_TREE=>ALIGN_AUTO.
+  ITEM-FONT = CL_GUI_LIST_TREE=>ITEM_FONT_PROP.
+  ITEM-TEXT = C_NODEKEY-DAY7.
+  APPEND ITEM TO ITEM_TABLE.
+
+
+  MY_DAY = MY_DAY + 7.
+
+ENDDO.
+
+ENDFORM.                    " BUILD_NODE_AND_ITEM_TABLE

@@ -1,0 +1,42 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZARBOL_TOP
+*&---------------------------------------------------------------------*
+REPORT ZARBOL MESSAGE-ID TREE_CONTROL_MSG.
+
+  CLASS LCL_APPLICATION DEFINITION DEFERRED.
+  CLASS CL_GUI_CFW DEFINITION LOAD.
+
+  FIELD-SYMBOLS: <fs_val> TYPE any.
+
+  TYPES: ITEM_TABLE_TYPE LIKE STANDARD TABLE OF MTREEITM
+         WITH DEFAULT KEY.
+
+  DATA: G_APPLICATION type ref to LCL_APPLICATION,
+        G_CUSTOM_CONTAINER TYPE REF TO CL_GUI_CUSTOM_CONTAINER,
+        G_TREE TYPE REF TO CL_GUI_LIST_TREE,
+        G_OK_CODE TYPE SY-UCOMM.
+
+  DATA: G_EVENT(30),
+        TXT_OUT_DAY TYPE TV_NODEKEY,
+*        TXT_OUT_NAME TYPE SCRPCHA72,
+        TXT_OUT_NAME type TV_ITMNAME,
+        aux type TV_NODEKEY,
+        res type tv_nodekey,
+
+
+
+  BEGIN OF c_nodekey,
+    weeks   TYPE tv_nodekey VALUE 'Weeks',                    "#EC NOTEXT
+    week   TYPE tv_nodekey VALUE 'Week',                  "#EC NOTEXT
+    day1   TYPE tv_nodekey VALUE 'Day1',                  "#EC NOTEXT
+    day2   TYPE tv_nodekey VALUE 'Day2',                    "#EC NOTEXT
+    day3   TYPE tv_nodekey VALUE 'Day3',                    "#EC NOTEXT
+    day4   TYPE tv_nodekey VALUE 'Day4',                    "#EC NOTEXT
+    day5   TYPE tv_nodekey VALUE 'Day5',                    "#EC NOTEXT
+    day6   TYPE tv_nodekey VALUE 'Day6',                    "#EC NOTEXT
+    day7   TYPE tv_nodekey VALUE 'Day7',                    "#EC NOTEXT
+  END OF c_nodekey.
+
+  data: BEGIN OF prueba,
+      res type tv_nodekey VALUE 'prueba',
+  END OF prueba.
