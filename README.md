@@ -26,3 +26,10 @@ En zluis, se ve solo código comentado, fueron mis primeras líneas en ABAP.
 - PBO: Contiene los procesos después de que el usuario ejecute
 - F01: Contiene las funciones del programa.
  
+### ZSMART
+  Programa que pide al usuario que escoja una de tres acciones para una factura:
+      -Visualizar
+      -Descargar
+      -Enviar por correo 
+  Todas ellas dependen de un Smartform que ilustra la factura en sí.
+  Es decir, que llaman a un smartform, que ha de estar creado
