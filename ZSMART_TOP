@@ -1,0 +1,46 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZSMART_TOP
+*&---------------------------------------------------------------------*
+TYPES BEGIN OF ty_vbrk.
+        INCLUDE TYPE vbrk.
+TYPES END OF ty_vbrk.
+
+DATA wa_vbrk TYPE ty_vbrk.
+DATA lt_vbrk TYPE TABLE OF ty_vbrk.
+
+
+TYPES BEGIN OF ty_vbrp.
+        INCLUDE TYPE vbrp.
+TYPES END OF ty_vbrp.
+
+DATA wa_vbrp TYPE ty_vbrp.
+DATA lt_vbrp TYPE TABLE OF ty_vbrp.
+
+
+DATA gwa_control TYPE ssfctrlop.
+data  line  type tline.
+DATA: gt_lines      TYPE TABLE OF tline.
+DATA: gv_job_output TYPE ssfcrescl.
+DATA fm_name TYPE rs38l_fnam.
+DATA: gv_size       TYPE i.
+
+data wa_recept type SOMLRECI1.
+data receptores type table of SOMLRECI1.
+
+
+DATA wa_buffer type string.
+DATA wa_doc_chng TYPE sodocchgi1.
+DATA i_record LIKE solisti1 OCCURS 0 WITH HEADER LINE.
+DATA: i_reclist LIKE somlreci1 OCCURS 0 WITH HEADER LINE,
+      i_objbin LIKE solisti1 OCCURS 0 WITH HEADER LINE,
+      i_objtxt LIKE solisti1 OCCURS 0 WITH HEADER LINE,
+      i_objpack LIKE sopcklsti1 OCCURS 0 WITH HEADER LINE.
+
+DATA: wa_objhead TYPE soli_tab,
+      w_ctrlop TYPE ssfctrlop,
+      w_compop TYPE ssfcompop,
+      w_return TYPE ssfcrescl,
+      w_data TYPE sodocchgi1.
+
+data: v_lines_txt TYPE i,
+      v_lines_bin TYPE i.
