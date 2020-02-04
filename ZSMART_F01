@@ -1,0 +1,373 @@
+*&---------------------------------------------------------------------*
+*&  Include           ZSMART_F01
+*&---------------------------------------------------------------------*
+
+
+*&---------------------------------------------------------------------*
+*&      Form  GET_DATA
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_data .
+
+  SELECT *
+    FROM vbrk INTO wa_vbrk
+    WHERE vbeln EQ p_vbeln.
+
+    APPEND wa_vbrk TO lt_vbrk.
+
+  ENDSELECT.
+
+  SELECT *
+    FROM vbrp INTO wa_vbrp
+    WHERE vbeln EQ p_vbeln.
+
+    APPEND wa_vbrp TO lt_vbrp.
+
+  ENDSELECT.
+
+ENDFORM.                    " GET_DATA
+*&---------------------------------------------------------------------*
+*&      Form  GET_FM
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM get_fm .
+
+  CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'
+    EXPORTING
+      formname           = 'ZEX1_ZSMART'
+*     VARIANT            = ' '
+*     DIRECT_CALL        = ' '
+    IMPORTING
+      fm_name            = fm_name
+    EXCEPTIONS
+      no_form            = 1
+      no_function_module = 2
+      OTHERS             = 3.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+  gwa_control-no_dialog = 'X'.
+  gwa_control-getotf = 'X'.
+
+ENDFORM.                    " GET_FM
+*&---------------------------------------------------------------------*
+*&      Form  SHOW
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM show .
+
+  PERFORM call_smartform.
+
+ENDFORM.                    " SHOW
+*&---------------------------------------------------------------------*
+*&      Form  DOWNLOAD
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM download .
+
+  PERFORM call_smartform2.
+
+  PERFORM convert.
+
+  PERFORM to_pc.
+
+ENDFORM.                    " DOWNLOAD
+*&---------------------------------------------------------------------*
+*&      Form  SEND
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM send .
+
+  PERFORM call_smartform2.
+
+  PERFORM convert.
+
+  LOOP AT gt_lines INTO line.
+    TRANSLATE line USING '~'.
+    CONCATENATE wa_buffer line INTO wa_buffer.
+  ENDLOOP.
+
+  TRANSLATE wa_buffer USING '~'.
+  DO.
+    i_record = wa_buffer.
+    APPEND i_record.
+    SHIFT wa_buffer LEFT BY 255 PLACES.
+    IF wa_buffer IS INITIAL.
+      EXIT.
+    ENDIF.
+  ENDDO.
+
+  REFRESH: i_reclist,
+            i_objtxt,
+            i_objbin,
+            i_objpack.
+  CLEAR wa_objhead.
+  i_objbin[] = i_record[].
+* Create Message Body Title and Description
+  i_objtxt = 'prueba de adjunto'.
+  APPEND i_objtxt.
+  DESCRIBE TABLE i_objtxt LINES v_lines_txt.
+  READ TABLE i_objtxt INDEX v_lines_txt.
+  wa_doc_chng-obj_name = 'smartform'.
+  wa_doc_chng-expiry_dat = sy-datum + 10.
+  wa_doc_chng-obj_descr = 'smartform'.
+  wa_doc_chng-sensitivty = 'F'.
+  wa_doc_chng-doc_size = v_lines_txt * 255.
+* Main Text
+  CLEAR i_objpack-transf_bin.
+  i_objpack-head_start = 1.
+  i_objpack-head_num = 0.
+  i_objpack-body_start = 1.
+  i_objpack-body_num = v_lines_txt.
+  i_objpack-doc_type = 'RAW'.
+  APPEND i_objpack.
+* Attachment (pdf-Attachment)
+  i_objpack-transf_bin = 'X'.
+  i_objpack-head_start = 1.
+  i_objpack-head_num = 0.
+  i_objpack-body_start = 1.
+  DESCRIBE TABLE i_objbin LINES v_lines_bin.
+  READ TABLE i_objbin INDEX v_lines_bin.
+  i_objpack-doc_size = v_lines_bin * 255 .
+  i_objpack-body_num = v_lines_bin.
+  i_objpack-doc_type = 'PDF'.
+  i_objpack-obj_name = 'smart'.
+  i_objpack-obj_descr = 'test'.
+  APPEND i_objpack.
+
+  wa_recept-receiver = p_dir.
+  wa_recept-rec_type = 'U'.
+  APPEND wa_recept TO receptores.
+
+
+  CALL FUNCTION 'SO_NEW_DOCUMENT_ATT_SEND_API1'
+    EXPORTING
+      document_data              = wa_doc_chng
+      put_in_outbox              = 'X'
+      commit_work                = 'X'
+    TABLES
+      packing_list               = i_objpack
+      object_header              = wa_objhead
+      contents_bin               = i_objbin
+      contents_txt               = i_objtxt
+      receivers                  = receptores
+    EXCEPTIONS
+      too_many_receivers         = 1
+      document_not_sent          = 2
+      document_type_not_exist    = 3
+      operation_no_authorization = 4
+      parameter_error            = 5
+      x_error                    = 6
+      enqueue_error              = 7
+      OTHERS                     = 8.
+  IF sy-subrc <> 0.
+    WRITE:/ 'Error al enviar correo', sy-subrc.
+  ELSE.
+    WRITE:/ 'Correo enviado'.
+  ENDIF.
+
+*
+*
+  CLEAR wa_recept.
+  REFRESH  receptores.
+
+ENDFORM.                    " SEND
+*&---------------------------------------------------------------------*
+*&      Form  CALL_SMARTFORM
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM call_smartform .
+
+  CALL FUNCTION fm_name
+    EXPORTING
+*     ARCHIVE_INDEX    =
+*     ARCHIVE_INDEX_TAB          =
+*     ARCHIVE_PARAMETERS         =
+*     CONTROL_PARAMETERS         =
+*     MAIL_APPL_OBJ    =
+*     MAIL_RECIPIENT   =
+*     MAIL_SENDER      =
+*     OUTPUT_OPTIONS   =
+*     USER_SETTINGS    = 'X'
+      zcab             = wa_vbrk
+*     IMPORTING
+*     DOCUMENT_OUTPUT_INFO       =
+      job_output_info  = gv_job_output
+*     JOB_OUTPUT_OPTIONS         =
+    TABLES
+      tabla            = lt_vbrp
+    EXCEPTIONS
+      formatting_error = 1
+      internal_error   = 2
+      send_error       = 3
+      user_canceled    = 4
+      OTHERS           = 5.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.                    " CALL_SMARTFORM
+*&---------------------------------------------------------------------*
+*&      Form  CALL_SMARTFORM2
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM call_smartform2 .
+
+  CALL FUNCTION fm_name
+    EXPORTING
+      control_parameters = gwa_control
+      zcab               = wa_vbrk
+    IMPORTING
+*     DOCUMENT_OUTPUT_INFO       =
+      job_output_info    = gv_job_output
+*     JOB_OUTPUT_OPTIONS =
+    TABLES
+      tabla              = lt_vbrp
+    EXCEPTIONS
+      formatting_error   = 1
+      internal_error     = 2
+      send_error         = 3
+      user_canceled      = 4
+      OTHERS             = 5.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.                    " CALL_SMARTFORM2
+*&---------------------------------------------------------------------*
+*&      Form  CONVERT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM convert .
+
+  CALL FUNCTION 'CONVERT_OTF'
+    EXPORTING
+      format                = 'PDF'
+      max_linewidth         = 132
+    IMPORTING
+      bin_filesize          = gv_size
+    TABLES
+      otf                   = gv_job_output-otfdata
+      lines                 = gt_lines
+    EXCEPTIONS
+      err_max_linewidth     = 1
+      err_format            = 2
+      err_conv_not_possible = 3
+      err_bad_otf           = 4
+      OTHERS                = 5.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+ENDFORM.                    " CONVERT
+*&---------------------------------------------------------------------*
+*&      Form  TO_PC
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM to_pc .
+
+  CALL FUNCTION 'GUI_DOWNLOAD'
+    EXPORTING
+      bin_filesize            = gv_size
+      filename                = 'C:\Users\lmesagar\Desktop\test\prueba.pdf'
+      filetype                = 'BIN'
+*     IMPORTING
+*     FILELENGTH              =
+    TABLES
+      data_tab                = gt_lines
+*     FIELDNAMES              =
+    EXCEPTIONS
+      file_write_error        = 1
+      no_batch                = 2
+      gui_refuse_filetransfer = 3
+      invalid_type            = 4
+      no_authority            = 5
+      unknown_error           = 6
+      header_not_allowed      = 7
+      separator_not_allowed   = 8
+      filesize_not_allowed    = 9
+      header_too_long         = 10
+      dp_error_create         = 11
+      dp_error_send           = 12
+      dp_error_write          = 13
+      unknown_dp_error        = 14
+      access_denied           = 15
+      dp_out_of_memory        = 16
+      disk_full               = 17
+      dp_timeout              = 18
+      file_not_found          = 19
+      dataprovider_exception  = 20
+      control_flush_error     = 21
+      OTHERS                  = 22.
+  IF sy-subrc <> 0.
+* Implement suitable error handling here
+  ENDIF.
+
+
+ENDFORM.                    " TO_PC
+*&---------------------------------------------------------------------*
+*&      Form  POPUP
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+*  -->  p1        text
+*  <--  p2        text
+*----------------------------------------------------------------------*
+FORM popup2.
+
+  CALL FUNCTION 'POPUP_TO_INFORM'
+    EXPORTING
+      titel = 'Aviso'
+      txt1  = 'Introduzca una dirección de correo electrónico'
+      txt2  = 'Ejemplo: luisbachiller96@gmail.com'.
+
+
+ENDFORM.                    " POPUP
+
+FORM popup1.
+
+  CALL FUNCTION 'POPUP_TO_INFORM'
+    EXPORTING
+      titel = 'Aviso'
+      txt1  = 'Dirección de correo no válida'
+      txt2  = 'Ejemplo: luisbachiller96@gmail.com'.
+
+
+ENDFORM.                    " POPUP
