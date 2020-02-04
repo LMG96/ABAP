@@ -1,0 +1,19 @@
+*----------------------------------------------------------------------*
+***INCLUDE ZSMART_SEL.
+*----------------------------------------------------------------------*
+
+
+SELECTION-SCREEN BEGIN OF BLOCK b1.
+SELECTION-SCREEN SKIP.
+PARAMETERS p_vbeln TYPE vbrk-vbeln OBLIGATORY.
+SELECTION-SCREEN ULINE.
+SELECTION-SCREEN END OF BLOCK b1.
+
+SELECTION-SCREEN BEGIN OF BLOCK b2.
+PARAMETERS: p_rad_sm RADIOBUTTON GROUP rad1 DEFAULT 'X',
+            p_rad_dw RADIOBUTTON GROUP rad1,
+            p_rad_ml RADIOBUTTON GROUP rad1.
+SELECTION-SCREEN SKIP.
+PARAMETERS p_dir TYPE ad_smtpadr MODIF ID sc1.
+SELECTION-SCREEN ULINE.
+SELECTION-SCREEN END OF BLOCK b2.
