@@ -1,0 +1,61 @@
+**&---------------------------------------------------------------------*
+**& Report  ZSMART
+**&
+**&---------------------------------------------------------------------*
+**&
+**& Luis Mesa Garcia
+**&
+**&---------------------------------------------------------------------*
+*
+REPORT zsmart.
+
+
+INCLUDE zsmart_sel.
+INCLUDE zsmart_top.
+INCLUDE zsmart_f01.
+
+
+
+*---------------------------
+
+AT SELECTION-SCREEN OUTPUT.
+
+  LOOP AT SCREEN INTO DATA(wa).
+    IF p_rad_ml EQ 'X' AND
+      wa-group1 EQ 'SC1'.
+      wa-input = 1.
+      wa-active = 1.
+    ENDIF.
+    IF p_rad_ml EQ '' AND
+      wa-group1 EQ 'SC1'.
+      wa-input = 0.
+      wa-active = 0.
+    ENDIF.
+    MODIFY screen FROM wa.
+  ENDLOOP.
+
+*---------------------------
+START-OF-SELECTION.
+
+  PERFORM get_data.
+  PERFORM get_fm.
+
+  IF p_rad_sm EQ 'X'.
+
+    PERFORM show.
+
+  ELSEIF p_rad_dw EQ 'X'.
+
+    PERFORM download.
+
+  ELSEIF p_rad_ml EQ  'X'.
+
+    IF p_dir IS NOT INITIAL and p_dir CS '@'.
+      PERFORM send.
+    ELSEIF p_dir IS NOT INITIAL and p_dir NS '@'.
+      PERFORM popup1.
+    ELSE.
+      PERFORM popup2.
+    ENDIF.
+
+  ENDIF.
