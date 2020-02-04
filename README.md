@@ -28,9 +28,11 @@ En zluis, se ve solo código comentado, fueron mis primeras líneas en ABAP.
  
 ### ZSMART
   Programa que pide al usuario que escoja una de tres acciones para una factura:
-  -Visualizar
-  -Descargar
-  -Enviar por correo 
+  
+  - Visualizar
+  - Descargar
+  - Enviar por correo 
+  
   Todas ellas dependen de un Smartform que ilustra la factura en sí.
   Es decir, que llaman a un smartform, que ha de estar creado.  
   Al igual que en ZARBOL, las extensiones contienen declaraciones de variables, pantalla de selección y funciones.
