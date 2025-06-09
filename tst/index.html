@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Resume/CV Design</title>
+  <!--  <link rel="stylesheet" href="styles.css"> --> 
+    <style>
+        @import url("https://fonts.googleapis.com/css?family=Montserrat:400,500,700&display=swap");
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            list-style: none;
+            font-family: "Montserrat", sans-serif;
+        }
+
+        body {
+            background: #585c68;
+            font-size: 12px;
+            line-height: 18px;
+            color: #555555;
+        }
+
+        .bold {
+            font-weight: 700;
+            font-size: 18px;
+            text-transform: uppercase;
+        }
+
+        .semi-bold {
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .resume {
+            width: 100%;
+            max-width: 800px;
+            height: auto;
+            display: flex;
+            margin: 50px auto;
+        }
+
+        .resume .resume_left {
+            width: 100%;
+            max-width: 250px;
+            background: rgb(54, 54, 54);
+        }
+
+        .resume .resume_left .resume_profile {
+            width: 80%;
+            height: 240px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .resume .resume_left .resume_profile img {
+            height: 90%;
+            margin-top: 10px;
+        }
+
+        .resume .resume_left .resume_content {
+            padding: 0 25px;
+        }
+
+        .resume .title {
+            margin-bottom: 10px;
+        }
+
+        .resume .resume_left .bold {
+            color: #fff;
+        }
+
+        .resume .resume_left .regular {
+            color: #ffe79b;
+        }
+
+        .resume .resume_item {
+            padding: 15px 0;
+            border-bottom: 2px solid #ffe79b;
+        }
+
+        .resume .resume_left .resume_item:last-child,
+        .resume .resume_right .resume_item:last-child {
+            border-bottom: 0px;
+        }
+
+        .resume .resume_left ul li {
+            display: flex;
+            margin-bottom: 4px;
+            align-items: center;
+        }
+
+        .resume .resume_left ul li:last-child {
+            margin-bottom: 0;
+        }
+
+        .resume .resume_left ul li .icon {
+            width: 25px;
+            height: 25px;
+            background: #fff;
+            color: #ffc404;
+            border-radius: 50%;
+            margin-right: 15px;
+            font-size: 16px;
+            position: relative;
+        }
+
+        .resume .icon i,
+        .resume .resume_right .resume_hobby ul li i {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .resume .resume_left ul li .data {
+            color: #ffe79b;
+        }
+
+        .resume .resume_left ul li .data a {
+            color: #ffe79b;
+        }
+
+        .resume .resume_left .resume_skills ul li {
+            display: flex;
+            margin-bottom: 4px;
+            color: #ffe79b;
+            align-items: center;
+        }
+
+        .resume .resume_left .resume_skills ul li .skill_name {
+            color: #fff;
+            padding-left: 0px;
+        }
+
+        .resume .resume_left .resume_skills ul li .skill_progress span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #fff;
+        }
+
+        .resume .resume_left .resume_languages ul li .skill_name {
+            color: #fff;
+            padding-left: 0px;
+            width: 25%;
+        }
+
+        .resume .resume_left .resume_languages ul li .skill_progress {
+            width: 60%;
+            margin: 0 5px;
+            height: 5px;
+            background: #ffe79b;
+            position: relative;
+        }
+
+        .resume .resume_left .resume_languages ul li .skill_per {
+            color: #fff;
+            padding-left: 5px;
+            width: 15%;
+        }
+
+        .resume .resume_left .resume_languages ul li .skill_progress span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #ffc404;
+        }
+
+        .resume .resume_right .resume_skills ul li {
+            display: flex;
+            margin-bottom: 0px;
+            color: #555555;
+            justify-content: space-between;
+            align-items: center;
+            padding-right: 10px;
+        }
+
+
+        .resume .resume_right .resume_skills ul li .skill_name {
+            width: 25%;
+        }
+
+        .resume .resume_right .resume_skills ul li .skill_progress {
+            width: 60%;
+            margin: 0 5px;
+            height: 5px;
+            background: #ffe79b;
+            position: relative;
+        }
+
+        .resume .resume_right .resume_skills ul li .skill_per {
+            width: 15%;
+        }
+
+        .resume .resume_right .resume_skills ul li .skill_progress span {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background: #ffc404;
+        }
+
+        .resume .resume_left .resume_social .semi-bold {
+            color: #fff;
+            margin-bottom: 3px;
+        }
+
+        .resume .resume_right {
+            width: 550px;
+            background: #fff;
+            padding: 25px;
+        }
+
+        .resume .resume_right .bold {
+            color: #555555;
+        }
+
+        .resume .resume_right .resume_work ul,
+        .resume .resume_right .resume_education ul {
+            padding-left: 40px;
+            overflow: hidden;
+        }
+
+        .resume .resume_right ul li {
+            position: relative;
+        }
+
+        .resume .resume_right ul li .date {
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 6px;
+        }
+
+        .resume .resume_right ul li .info {
+            margin-bottom: 10px;
+            text-align: justify;
+        }
+
+        .resume .resume_right p {
+            text-align: justify;
+            margin-top: 10px;
+        }
+
+        .resume .resume_right ul li:last-child .info {
+            margin-bottom: 0;
+        }
+
+        .resume .resume_right .resume_work ul li:before,
+        .resume .resume_right .resume_education ul li:before {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: -25px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            border: 2px solid #ffc404;
+        }
+
+        .resume .resume_right .resume_work ul li:after,
+        .resume .resume_right .resume_education ul li:after {
+            content: "";
+            position: absolute;
+            top: 14px;
+            left: -21px;
+            width: 2px;
+            height: 113%;
+            background: #ffc404;
+        }
+
+        .resume .resume_right .resume_hobby ul {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .resume .resume_right .resume_hobby ul li {
+            width: 80px;
+            height: 80px;
+            border: 2px solid #ffc404;
+            border-radius: 50%;
+            position: relative;
+            color: #ffc404;
+        }
+
+        .resume .resume_right .resume_hobby ul li i {
+            font-size: 30px;
+        }
+
+        .resume .resume_right .resume_hobby ul li:before {
+            content: "";
+            position: absolute;
+            top: 40px;
+            right: -52px;
+            width: 50px;
+            height: 2px;
+            background: #ffc404;
+        }
+
+        .resume .resume_right .resume_hobby ul li:last-child:before {
+            display: none;
+        }
+
+        .study-center {
+            color: #fff;
+            margin-top: 6px;
+        }
+
+        .study-title {
+            margin-bottom: 6px;
+        }
+
+        .resume .resume_right .resume_skills .tech-skills .semi-bold {
+            text-align: left;
+            margin-bottom: 4px;
+        }
+    </style>
+    <link rel="stylesheet"
+        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
+</head>
+
+<body>
+
+    <div class="resume">
+        <div class="resume_left">
+            <div class="resume_profile">
+                <img src="foto_cv.png" alt="profile_pic">
+            </div>
+            <div class="resume_content">
+                <div class="resume_item resume_info">
+                    <div class="title">
+                        <p class="bold">Luis Mesa</p>
+                        <p class="regular">Senior Salesforce Developer</p>
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="icon">
+                                <i class="las la-map-marker-alt "></i>
+                            </div>
+                            <div class="data">
+                                Valencia <br /> España
+                            </div>
+                        </li>
+                        <li>
+                            <div class="icon">
+                                <i class="las la-phone-alt "></i>
+                            </div>
+                            <div class="data">
+                                +34 659 141 981
+                            </div>
+                        </li>
+                        <li>
+                            <div class="icon">
+                                <i class="las la-envelope"></i>
+                            </div>
+                            <div class="data">
+                                luisbachiller96@gmail.com
+                            </div>
+                        </li>
+                        <li>
+                            <div class="icon">
+                                <i class="lab la-linkedin-in"></i>
+                            </div>
+                            <div class="data">
+                                <a href="https://www.linkedin.com/in/luis-mesa-garc%C3%ADa-79a116176/">linkedin.com/in/
+                                    <br /> Luis Mesa </a>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+                <div class="resume_item resume_social">
+                    <div class="title">
+                        <p class="bold">Formación</p>
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="data">
+                                <p class="semi-bold">2014-2019</p>
+                                <p class="study-center">Universitat Politècnica de València</p>
+                                <p class="study-title">Grado en Ingeniería Informática</p>
+                            </div>
+                        </li>
+                    </ul>
+
+                </div>
+                <div class="resume_item resume_social">
+                    <div class="title">
+                        <p class="bold"> Certificados</p>
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce Associate</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce IA Associate</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce Administrator</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce Platform App Builder</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce Platform Developer I</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div class="data">
+                                <p class="study-center">Salesforce Sharing and Visibility Architect</p>
+                            </div>
+                        </li>
+
+                    </ul>
+                </div>
+                <div class="resume_item resume_skills">
+                    <div class="title">
+                        <p class="bold">SoftSkills</p>
+                    </div>
+                    <ul>
+                        <li>
+                            <div class="skill_name">Trabajo en equipo</div>
+                        </li>
+                        <li>
+                            <div class="skill_name">Metodología Agile</div>
+                        </li>
+                        <li>
+                            <div class="skill_name">Proactividad y creatividad</div>
+                        </li>
+                        <li>
+                            <div class="skill_name">Resiliencia y autonomía</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="resume_item resume_languages">
+                    <div class="title">
+                        <p class="bold">Languages</p>
+                    </div>
+                    <div style="width: 100%; display: inline-block; vertical-align: top;">
+                        <ul>
+                            <li>
+                                <div class="skill_name">
+                                    Castellano (Nativo)
+                                </div>
+                                <div class="skill_progress">
+                                    <span style="width: 100%;"></span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="skill_name">
+                                    Valenciano/Catalán (Nativo)
+                                </div>
+                                <div class="skill_progress">
+                                    <span style="width: 100%;"></span>
+                                </div>
+                            </li>
+                            <li>
+                                <div class="skill_name">
+                                    Inglés B2
+                                </div>
+                                <div class="skill_progress">
+                                    <span style="width: 80%;"></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="resume_right">
+            <div class="resume_item resume_about">
+                <div class="title">
+                    <p class="bold"> Quien soy?</p>
+                </div>
+                <p>Desarrollador Salesforce con más de cuatro años y medio de experiencia en el diseño, desarrollo y
+                    personalización de soluciones empresariales.
+                    Amplio dominio en Apex, Lightning Web Components (LWC), integraciones por REST API y configuración
+                    declarativa.
+                    Evolución a rol de Technical Lead con experiencia en mentoría y supervisión técnica.</p>
+            </div>
+            <div class="resume_item resume_work">
+                <div class="title">
+                    <p class="bold">Experiencia Profesional</p>
+                </div>
+                <ul>
+                    <li>
+                        <div class="date">Enero 2024 - Actualidad</div>
+                        <div class="info">
+                            <p class="semi-bold">Proyecto Contact Center (Aseguradora)</p>
+
+                            <p>Tareas:
+                                <br>Actualmente, estoy en un proyecto en el sector asegurador,
+                                donde mi rol ha evolucionado significativamente. Estoy llevando a cabo tareas como la
+                                refactorización y reestructuración
+                                de lógicas existentes para mejorar el rendimiento y la mantenibilidad. Tuve un papel
+                                fundamental en el
+                                diseño e implementación de una Experience Cloud, creando portales y comunidades. Mi
+                                desarrollo incluye APIs REST y
+                                componentes reutilizables, demostrando un enfoque en soluciones escalables. He asumido
+                                un liderazgo técnico,
+                                evolucionando hacia un rol de Technical Lead, lo que implica responsabilidad en la
+                                documentación técnica y code reviews.
+                                Además, estoy activamente involucrado en la aplicación de nuevas features de Salesforce,
+                                manteniéndome al día
+                                con las últimas innovaciones de la plataforma.
+                            </p>
+
+                        </div>
+                    </li>
+                    <li>
+                        <div class="date">Agosto 2023 - Diciembre 2023</div>
+                        <div class="info">
+                            <p class="semi-bold">Proyecto Departamento de Ventas (Sales Cloud)</p>
+                            <p>Tareas:
+                                <br>Me centré en potenciar el departamento de ventas utilizando Sales Cloud.
+                                Desarrollé Lightning Web Components específicamente diseñados para optimizar los
+                                procesos comerciales.
+                                Además, trabajé en la integración entre Outlook y Salesforce, mejorando la eficiencia y
+                                la sincronización
+                                de datos para el equipo de ventas. Mi expertise también incluyó el modelado de datos
+                                dentro del entorno de
+                                Sales Cloud para asegurar una estructura robusta y escalable.
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="date">Julio 2022 - Julio 2023</div>
+                        <div class="info">
+                            <p class="semi-bold">Proyecto Contact Center (Banca)</p>
+                            <p>Tareas:
+                                <br>Desarrollé integraciones a través de REST API para conectar Salesforce con sistemas
+                                externos.
+                                Mi trabajo abarcó tanto el desarrollo front-end con LWC y Auras como el desarrollo
+                                back-end con Apex.
+                                Un aspecto clave de mi rol fue la mentoría y colaboración con equipos funcionales y de
+                                negocio,
+                                lo que demuestra mi capacidad para trabajar en un entorno multidisciplinar y compartir
+                                conocimientos.
+                            </p>
+                        </div>
+                    </li>
+                    <li>
+                        <div class="date">Enero 2021 - Junio 2022</div>
+                        <div class="info">
+                            <p class="semi-bold">Proyecto de Servicio de Atención al Cliente (Banca)</p>
+                            <p>Tareas:
+                                <br>Utilicé Aura Components y Lightning Web Components (LWC) para el desarrollo de la
+                                interfaz de usuario.
+                                En el lado del back-end, me encargué de desarrollar con Apex, incluyendo controladores,
+                                triggers, clases asíncronas y sus correspondientes test para asegurar la calidad del
+                                código.
+                                Además, contribuí a la automatización de procesos utilizando herramientas declarativas
+                                como
+                                Flows, Workflows y Process Builder. Los despliegues se gestionaron eficientemente a
+                                través de Copado y Change Sets,
+                                asegurando una entrega continua y controlada.
+                            </p>
+                        </div>
+                    </li>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>
